@@ -6,7 +6,7 @@ import wandb
 import os
 
 from data.dataset import NeuronVisionDataset
-from pixel_transformer_neuro.evaluation.wandb_helpers import log_binomial_diagnostics
+from evaluation.wandb_binomial_logger import log_binomial_diagnostics
 
 
 def run_training(
@@ -73,11 +73,12 @@ def run_training(
                 count = batch["response"].to(device).float()
                 logits = model(x, neuron_idx).squeeze()
                 p_hat = torch.sigmoid(logits)
-                loss = torch.nn.functional.binary_cross_entropy_with_logits(
-                    logits,
+                loss = torch.nn.functional.binary_cross_entropy(
+                    p_hat,
                     count / trials_per_stimulus,
-                    weight=trials_per_stimulus * torch.ones_like(count)
-                )
+                    weight=torch.full_like(count, fill_value=trials_per_stimulus)
+                ) / count.numel()
+                
                 loss.backward()
                 optimizer.step()
 
