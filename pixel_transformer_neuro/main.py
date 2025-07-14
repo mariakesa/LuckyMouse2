@@ -33,6 +33,6 @@ if __name__ == "__main__":
         dataset_path_dict=dataset_path_dict,
         wandb_config=wandb_config,
         num_epochs=20,
-        batch_size=256,
-        learning_rate=1e-3
+        batch_size=64,
+        learning_rate=1e-4
     )

@@ -209,3 +209,5 @@ __marimo__/
 pixel_transformer_neuro/data/processed
 saved_models
 wandb
+neuron_property_decoding/data
+saved_models_

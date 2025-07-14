@@ -12,7 +12,7 @@ allen_cache_path = Path(os.environ.get('CAIM_ALLEN_CACHE_PATH'))
 boc = BrainObservatoryCache(manifest_file=str(allen_cache_path / 'brain_observatory_manifest.json'))
 
 input_dir = "/home/maria/Documents/AllenBrainObservatory/neural_activity_matrices"
-output_path = "/home/maria/LuckyMouse2/pixel_transformer_neuro/data/cell_specimen_ids_in_order.npy"
+output_path = "/home/maria/LuckyMouse2/pixel_transformer_neuro/data/processed/cell_specimen_ids_in_order.npy"
 
 all_cell_ids = []
 
