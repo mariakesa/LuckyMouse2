@@ -50,17 +50,18 @@ class AttentionNullModel(nn.Module):
         logits = self.mlp(modulated).squeeze(-1)                  # (B,)
         return logits
 
-# --- Evaluation loop ---
+
+num_folds = 10
 kf = KFold(n_splits=num_folds, shuffle=True, random_state=42)
+
 r2_scores = []
 correlations = []
 sigmoid = torch.nn.Sigmoid()
 
-vit_embeddings = vit_embeddings.to("cpu")
-
-for fold_idx, (train_idx, test_idx) in enumerate(kf.split(np.arange(num_neurons))):
+for fold_idx, (train_img_idx, test_img_idx) in enumerate(kf.split(np.arange(num_images))):
     print(f"\n🧪 Evaluating Fold {fold_idx}")
 
+    # Load model for this fold
     model_path = os.path.join(model_dir, f"fold_{fold_idx}", "model.pt")
     model = AttentionNullModel(
         vit_dim=1000,
@@ -70,29 +71,19 @@ for fold_idx, (train_idx, test_idx) in enumerate(kf.split(np.arange(num_neurons)
     model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.eval()
 
-    preds = np.zeros((len(test_idx), num_images), dtype=np.float32)
+    # Predict for all neurons, only on test images
+    preds = np.zeros((num_neurons, len(test_img_idx)), dtype=np.float32)
 
     with torch.no_grad():
-        for j, neuron_id in enumerate(tqdm(test_idx, desc=f"Predicting Fold {fold_idx}")):
-            neuron_idx = torch.full((num_images,), neuron_id, dtype=torch.long)
-            output = model(vit_embeddings, neuron_idx)
-            probs = sigmoid(output).squeeze().cpu().numpy()
-            preds[j] = probs
-    '''
-    with torch.no_grad():
-        
-        for j, neuron_id in enumerate(tqdm(test_idx, desc=f"Predicting Fold {fold_idx}")):
-            probs = []
-            for i in range(0, num_images, 256):
-                image_batch = vit_embeddings[i:i+256]
-                neuron_batch = torch.full((image_batch.shape[0],), neuron_id, dtype=torch.long)
-                out = model(image_batch, neuron_batch)
-                p = sigmoid(out).squeeze().cpu().numpy()
-                probs.append(p)
-            preds[j] = np.concatenate(probs)
-    '''
-    # True values
-    y_true = empirical_probs[test_idx].flatten()
+        for neuron_id in tqdm(range(num_neurons), desc=f"Predicting Fold {fold_idx}"):
+            test_embeddings = vit_embeddings[test_img_idx]  # (num_test_images, D)
+            neuron_idx = torch.full((len(test_img_idx),), neuron_id, dtype=torch.long)
+            output = model(test_embeddings, neuron_idx)
+            probs = sigmoid(output).cpu().numpy()
+            preds[neuron_id] = probs  # (num_test_images,)
+
+    # Compare with empirical probs on test images
+    y_true = empirical_probs[:, test_img_idx].flatten()
     y_pred = preds.flatten()
     mask = np.isfinite(y_true) & np.isfinite(y_pred)
 
