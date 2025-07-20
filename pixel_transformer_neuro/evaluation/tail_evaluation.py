@@ -53,15 +53,20 @@ class AttentionNullModel(nn.Module):
 
 num_folds = 10
 kf = KFold(n_splits=num_folds, shuffle=True, random_state=42)
-
-r2_scores = []
-correlations = []
 sigmoid = torch.nn.Sigmoid()
+# === CHANGES TO SCRIPT: Tail-specific R² computation ===
+
+# === CHANGES TO SCRIPT: Tail-specific R² computation for y_true > 0.2 ===
+
+# Inside the KFold loop
+r2_scores_all = []
+r2_scores_tail = []
+correlations = []
 
 for fold_idx, (train_img_idx, test_img_idx) in enumerate(kf.split(np.arange(num_images))):
     print(f"\n🧪 Evaluating Fold {fold_idx}")
 
-    # Load model for this fold
+    # Load model
     model_path = os.path.join(model_dir, f"fold_{fold_idx}", "model.pt")
     model = AttentionNullModel(
         vit_dim=1000,
@@ -71,30 +76,41 @@ for fold_idx, (train_img_idx, test_img_idx) in enumerate(kf.split(np.arange(num_
     model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.eval()
 
-    # Predict for all neurons, only on test images
+    # Predict for all neurons on test set
     preds = np.zeros((num_neurons, len(test_img_idx)), dtype=np.float32)
 
     with torch.no_grad():
         for neuron_id in tqdm(range(num_neurons), desc=f"Predicting Fold {fold_idx}"):
-            test_embeddings = vit_embeddings[test_img_idx]  # (num_test_images, D)
+            test_embeddings = vit_embeddings[test_img_idx]
             neuron_idx = torch.full((len(test_img_idx),), neuron_id, dtype=torch.long)
             output = model(test_embeddings, neuron_idx)
             probs = sigmoid(output).cpu().numpy()
-            preds[neuron_id] = probs  # (num_test_images,)
+            preds[neuron_id] = probs
 
-    # Compare with empirical probs on test images
+    # Flatten predictions and true values
     y_true = empirical_probs[:, test_img_idx].flatten()
     y_pred = preds.flatten()
     mask = np.isfinite(y_true) & np.isfinite(y_pred)
 
-    r2 = r2_score(y_true[mask], y_pred[mask])
+    # Full R² and correlation
+    r2_all = r2_score(y_true[mask], y_pred[mask])
     corr, _ = pearsonr(y_true[mask], y_pred[mask])
-    r2_scores.append(r2)
+    r2_scores_all.append(r2_all)
     correlations.append(corr)
+
+    # R² on tail (y_true > 0.2)
+    tail_mask = (y_true > 0.2) & mask
+    if np.sum(tail_mask) > 0:
+        r2_tail = r2_score(y_true[tail_mask], y_pred[tail_mask])
+    else:
+        r2_tail = np.nan  # not enough tail points
+    r2_scores_tail.append(r2_tail)
 
 # --- Summary ---
 print("\n📊 Cross-validated Results:")
-print(f"Mean R²:  {np.mean(r2_scores):.4f} ± {np.std(r2_scores):.4f}")
-print(f"Mean r:   {np.mean(correlations):.4f} ± {np.std(correlations):.4f}")
+print(f"Mean R² (all):      {np.nanmean(r2_scores_all):.4f} ± {np.nanstd(r2_scores_all):.4f}")
+print(f"Mean R² (tail>0.2): {np.nanmean(r2_scores_tail):.4f} ± {np.nanstd(r2_scores_tail):.4f}")
+print(f"Mean Pearson r:     {np.nanmean(correlations):.4f} ± {np.nanstd(correlations):.4f}")
+
 
 

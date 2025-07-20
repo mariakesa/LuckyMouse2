@@ -19,7 +19,7 @@ def run_training(
     learning_rate=1e-3,
     num_folds=10,
     trials_per_stimulus=50,
-    save_dir="saved_models",
+    save_dir="saved_models_tanh",
     device="cuda" if torch.cuda.is_available() else "cpu"
 ):
     os.makedirs(save_dir, exist_ok=True)

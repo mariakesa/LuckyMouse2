@@ -132,7 +132,7 @@ class AttentionNullModel(nn.Module):
         neuron_idx:      (B,)   - neuron indices
         """
         neuron_vector = self.neuron_embedding(neuron_idx)      # (B, D)
-        modulated = image_embedding + torch.sigmoid(neuron_vector)               # (B, D) - elementwise modulation
+        modulated = image_embedding + torch.tanh(neuron_vector) #torch.sigmoid(neuron_vector)               # (B, D) - elementwise modulation
         logits = self.mlp(modulated).squeeze(-1)                  # (B,)
         return logits
 

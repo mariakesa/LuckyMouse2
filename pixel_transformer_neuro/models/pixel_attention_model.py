@@ -44,8 +44,6 @@ class PixelAttentionModel(nn.Module):
         x = torch.cat([x, neuron_emb_seq], dim=-1)  # (B, L, D'+E)
         x = self.token_proj(x)  # (B, L, A)
 
-        x = torch.randn(64, 128)      # (B, 512)
-        x_seq = x.unsqueeze(-1)
         # Self-attention
         attn_out, _ = self.attn(x, x, x)  # (B, L, A)
 
