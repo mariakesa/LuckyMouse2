@@ -211,3 +211,12 @@ saved_models
 wandb
 neuron_property_decoding/data
 saved_models_
+glm_binomial_topk_results.pkl
+glm_binomial_topk_shuffled.pkl
+
+glm_binomial_topk_results_.pkl
+glm_binomial_topk_shuffled_.pkl
+
+glm_binomial_topk_results_100.pkl
+glm_binomial_topk_results_118.pkl
+glm_binomial_topk_shuffled_100.pkl
