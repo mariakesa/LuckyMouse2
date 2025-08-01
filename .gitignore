@@ -220,3 +220,10 @@ glm_binomial_topk_shuffled_.pkl
 glm_binomial_topk_results_100.pkl
 glm_binomial_topk_results_118.pkl
 glm_binomial_topk_shuffled_100.pkl
+
+neurons.txt
+r2_log.txt
+
+logreg_coefficients_sig_neurons.npy
+logreg_r2_trialwise_all_neurons.npy
+logreg_representation_vectors_train_only.npy

@@ -51,5 +51,6 @@ if __name__=="__main__":
     sig_neurons_weak = extract_weakly_significant_neurons(filepath='/home/maria/LuckyMouse2/mo/neurons.txt')
     neurons_negative = extract_non_significant_neurons(filepath='/home/maria/LuckyMouse2/mo/neurons.txt')
     print(len(sig_neurons_strong)/39209, len(sig_neurons_weak)/39209, len(neurons_negative)/39209)
+    print(len(neurons_negative)/39209, len(sig_neurons_weak)/39209, len(sig_neurons_strong)/39209)
     s1, s2, s3=len(sig_neurons_strong)/39209, len(sig_neurons_weak)/39209, len(neurons_negative)/39209
     print(s1+s2+s3)
